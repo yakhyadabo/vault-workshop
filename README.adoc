@@ -1,0 +1,111 @@
+Start consul 
+
+Start vault 
+
+
+$ vault server -config=config.hcl
+Error initializing core: Failed to lock memory: cannot allocate memory
+
+Solution : 
+$ sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault))
+
+Again
+$ vault server -config=config.hcl
+
+$ export VAULT_ADDR=http://127.0.0.1:8200  
+$ export VAULT_SKIP_VERIFY=1
+
+$ vault operator init
+
+Unseal Key 1: TNswv2pKvy66D4FqcB5uHIXbNwVVaQD9DVJcP0SluXgh
+Unseal Key 2: 6jUMTWyTj4eJVERL3u/3IVNIlM0FYyeKE3yHtxf/DYwz
+Unseal Key 3: XvVVpUVrmsp0p30N2vaKt5B3+kOCNK1DKYIAifeHdZY2
+Unseal Key 4: wW1RxbH/512kyOA+JfaiQrGdfFsrOJjuS2Le65YIUnJ3
+Unseal Key 5: nzMJLApj2/oRSqEP9LQJLth8l/rio4vMLhJlEpGIJQ6K
+
+Initial Root Token: s.1MGtucetS4l9sXsKgsKLVP1o
+
+vault operator unseal
+
+Vault pki 
+
+1. Enable pki 
+$ vault secrets enable pki
+
+# Tune the pki secrets engine to issue certificates with a maximum time-to-live (TTL) of 87600 hours
+$ vault secrets tune -max-lease-ttl=87600h pki
+
+2. Generate Root CA
+
+3. Intermediate CA
+
+Generate the Root CA
+
+vault write -format=json pki/root/generate/internal \
+ common_name="example.com" ttl=87600h | tee \
+>(jq -r .data.certificate > ca.pem) \
+>(jq -r .data.issuing_ca > issuing_ca.pem) \
+>(jq -r .data.private_key > ca-key.pem)
+
+This generates a new self-signed CA certificate and private key. Vault will automatically revoke the generated root at the end of its lease period (TTL); the CA certificate will sign its own Certificate Revocation List (CRL).
+
+
+
+Check from the API itself
+curl -s http://localhost:8200/v1/pki/ca/pem | openssl x509 -text 
+
+
+Configure the CA and CRL URLs
+$ vault write pki/config/urls \
+        issuing_certificates="http://127.0.0.1:8200/v1/pki/ca" \
+        crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"
+
+
+Generate Intermediate CA
+
+1. vault secrets enable -path=pki_int pki
+2. vault secrets tune -max-lease-ttl=43800h pki_int
+
+
+Generate an intermediate and save the CSR as pki_intermediate.csr
+
+vault write -format=json pki_int/intermediate/generate/internal \
+common_name="example.com Intermediate Authority" ttl=43800h | tee \
+>(jq -r .data.csr > pki_intermediate.csr) \
+>(jq -r .data.private_key > pki_intermediate.pem)
+
+
+
+Sign the intermediate certificate with the root certificate and save the generated certificate as intermediate.cert.pem
+(Setting up our Intermediate CA require signing our CSR using our Root CA)
+
+vault write -format=json pki/root/sign-intermediate \
+csr=@pki_intermediate.csr \
+common_name="example.com Intermediate Authority" ttl=43800h | tee \
+>(jq -r .data.certificate > pki_intermediate.cert.pem) \
+>(jq -r .data.issuing_ca > pki_intermediate_issuing_ca.pem)
+
+
+
+Once the CSR is signed and the root CA returns a certificate, it can be imported back into Vault:
+
+vault write pki_int/intermediate/set-signed certificate=@pki_intermediate.cert.pem
+
+
+Create Pki Role
+
+vault write pki_int/roles/example-dot-com \
+        allowed_domains="example.com" \
+        allow_subdomains=true \
+        max_ttl="720h"
+
+
+vault write pki_int/issue/example-dot-com common_name="test.example.com" ttl="24h"
+
+
+Request a new certificate for the test.example.com domain based on the example-dot-com role:
+
+
+https://learn.hashicorp.com/vault/secrets-management/sm-pki-engine
+http://yet.org/2018/10/vault-pki/
+
