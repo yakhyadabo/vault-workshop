@@ -37,9 +37,6 @@ $ vault secrets tune -max-lease-ttl=87600h pki
 
 2. Generate Root CA
 
-3. Intermediate CA
-
-Generate the Root CA
 
 vault write -format=json pki/root/generate/internal \
  common_name="example.com" ttl=87600h | tee \
@@ -61,7 +58,7 @@ $ vault write pki/config/urls \
         crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"
 
 
-Generate Intermediate CA
+3. Generate Intermediate CA
 
 1. vault secrets enable -path=pki_int pki
 2. vault secrets tune -max-lease-ttl=43800h pki_int
