@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+
+  vault:
+    image: vault:latest
+    volumes:
+      - ./config:/vault/config
+      - ./policies:/vault/policies
+      - ./data:/vault/data:z
+    ports:
+      - 8200:8200
+    environment:
+      - SKIP_SETCAP=true
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_API_ADDR=http://0.0.0.0:8200
+      - VAULT_ADDRESS=http://0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/config.hcl
+
+    networks: 
+      - consul-demo
+    depends_on:
+      - consul-agent-1
+
+  consul-agent-1: &consul-agent
+    image: consul:1.6.0
+    networks:
+      - consul-demo
+    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+ ##  consul-agent-2:
+ ##    <<: *consul-agent
+
+ ##  consul-agent-3:
+ ##    <<: *consul-agent
+
+  consul-server-1: &consul-server
+    <<: *consul-agent
+    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-server-2:
+    <<: *consul-server
+
+  consul-server-bootstrap:
+    <<: *consul-agent
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
+
+networks:
+  consul-demo:
