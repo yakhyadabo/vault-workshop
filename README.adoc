@@ -55,7 +55,7 @@ vault operator unseal
 $ vault secrets enable pki
 ----
 
-# Tune the pki secrets engine to issue certificates with a maximum time-to-live (TTL) of 87600 hours
+Tune the pki secrets engine to issue certificates with a maximum time-to-live (TTL) of 87600 hours
 [source,shell]
 ----
 $ vault secrets tune -max-lease-ttl=87600h pki
