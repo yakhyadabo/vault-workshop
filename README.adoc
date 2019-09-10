@@ -131,19 +131,29 @@ Create Pki Role
 
 [source,shell]
 ----
-vault write pki_int/roles/example-dot-com \
+$ vault write pki_int/roles/example-dot-com \
         allowed_domains="example.com" \
         allow_subdomains=true \
         max_ttl="720h"
 ----
 
+CRL configuration
+[source,shell]
+----
+$ vault write pki_int/config/urls issuing_certificates="http://127.0.0.1:8200/v1/pki_int/ca" crl_distribution_points="http://127.0.0.1:8200/v1/pki_int/crl"
+----
+
+Issue a certificate
 [source,shell]
 ----
 vault write pki_int/issue/example-dot-com common_name="test.example.com" ttl="24h"
 ----
 
-Request a new certificate for the test.example.com domain based on the example-dot-com role:
-
+Allow clients to generate their own certificates
+[source,shell]
+----
+$ vault policy write pki_int policy/pki_int.hcl
+----
 
 https://learn.hashicorp.com/vault/secrets-management/sm-pki-engine
 http://yet.org/2018/10/vault-pki/
