@@ -3,6 +3,10 @@
 === Setup Infrastructure
 
 Start consul
+[source,shell]
+----
+$ TODO
+----
 
 Start vault
 
@@ -31,15 +35,11 @@ $ export VAULT_SKIP_VERIFY=1
 
 [source,shell]
 ----
-$ vault operator init
-
-Unseal Key 1: TNswv2pKvy66D4FqcB5uHIXbNwVVaQD9DVJcP0SluXgh
-Unseal Key 2: 6jUMTWyTj4eJVERL3u/3IVNIlM0FYyeKE3yHtxf/DYwz
-Unseal Key 3: XvVVpUVrmsp0p30N2vaKt5B3+kOCNK1DKYIAifeHdZY2
-Unseal Key 4: wW1RxbH/512kyOA+JfaiQrGdfFsrOJjuS2Le65YIUnJ3
-Unseal Key 5: nzMJLApj2/oRSqEP9LQJLth8l/rio4vMLhJlEpGIJQ6K
-
-Initial Root Token: s.1MGtucetS4l9sXsKgsKLVP1o
+$ vault operator init \
+      -recovery-shares=1 \
+      -recovery-threshold=1 \
+      -recovery-pgp-keys="keybase:yakhyadabo"
+      -root-token-pgp-key="keybase:yakhyadabo"
 ----
 
 [source,shell]
