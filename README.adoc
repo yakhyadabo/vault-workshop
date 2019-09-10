@@ -42,11 +42,6 @@ $ vault operator init \
       -root-token-pgp-key="keybase:yakhyadabo"
 ----
 
-[source,shell]
-----
-vault operator unseal
-----
-
 === Vault pki
 
 1. Enable pki
