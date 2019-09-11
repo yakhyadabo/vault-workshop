@@ -5,14 +5,14 @@ vault secrets enable -path=pki_int pki
 vault secrets tune -max-lease-ttl=43800h pki_int
 
 
-# Generate an intermediate
+# Generate a private key along with a CSR
 vault write -format=json pki_int/intermediate/generate/internal \
 common_name="example.com Intermediate Authority" ttl=43800h | tee \
 >(jq -r .data.csr > pki_intermediate.csr) \
 >(jq -r .data.private_key > pki_intermediate.pem)
 
 
-# Sign the certificate
+# Generate a cerificate signed by the root CA
 vault write -format=json pki/root/sign-intermediate \
 csr=@pki_intermediate.csr \
 common_name="example.com Intermediate Authority" ttl=43800h | tee \

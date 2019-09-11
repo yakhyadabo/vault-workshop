@@ -84,7 +84,7 @@ $ vault write pki/config/urls \
         crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"
 ----
 
-3. Generate Intermediate CA
+3. Create Intermediate CA
 
 [source,shell]
 ----
@@ -92,8 +92,8 @@ $ vault secrets enable -path=pki_int pki
 $ vault secrets tune -max-lease-ttl=43800h pki_int
 ----
 
-Generate an intermediate and save the CSR as pki_intermediate.csr
-
+Generate a private key (_pki_intermediate.pem_) along with a CSR (_pki_intermediate.csr_)
+ 
 [source,shell]
 ----
 vault write -format=json pki_int/intermediate/generate/internal \
@@ -103,8 +103,7 @@ common_name="example.com Intermediate Authority" ttl=43800h | tee \
 ----
 
 
-Sign the intermediate certificate with the root certificate and save the generated certificate as intermediate.cert.pem
-(Setting up our Intermediate CA require signing our CSR using our Root CA)
+Generate a certificate (_pki_intermediate.cert.pem_) signed by the root CA
 
 [source,shell]
 ----
