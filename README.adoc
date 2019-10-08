@@ -42,9 +42,10 @@ $ vault operator init \
       -root-token-pgp-key="keybase:yakhyadabo"
 ----
 
-=== Vault pki
+=== Vault PKI
 
 1. Enable pki
+
 [source,shell]
 ----
 $ vault secrets enable pki
